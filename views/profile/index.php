@@ -16,35 +16,15 @@ $user = $stmt->fetch();
 ?>
 
 <div class="container">
-    <h2>Личный кабинет</h2>
+    <h2>👤 Личный кабинет</h2>
     <p><strong>Имя:</strong> <?= htmlspecialchars($user['name']) ?></p>
     <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
 
-    <h3>Мои заказы</h3>
-    <table class="orders-table">
-        <thead>
-            <tr>
-                <th>ID заказа</th>
-                <th>Сумма</th>
-                <th>Статус</th>
-                <th>Дата</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php
-            $stmt = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC");
-            $stmt->execute([$user_id]);
-            while ($order = $stmt->fetch()):
-            ?>
-                <tr>
-                    <td>#<?= $order['id'] ?></td>
-                    <td><?= $order['total_price'] ?> грн</td>
-                    <td><?= ucfirst($order['status']) ?></td>
-                    <td><?= $order['created_at'] ?></td>
-                </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+    <h3>⚡ Полезные ссылки:</h3>
+    <ul>
+        <li><a href="/znahidka/views/orders/my_orders.php">📦 Мои заказы</a></li>
+        <li><a href="/znahidka/core/auth/logout.php">🚪 Выйти</a></li>
+    </ul>
 </div>
 
 <?php require_once 'templates/footer.php'; ?>
