@@ -19,6 +19,8 @@ session_start();
                     <li><a href="/znahidka/?page=cart">Корзина</a></li>
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <li><a href="/znahidka/?page=profile">Личный кабинет</a></li>
+                        <li><a href="/znahidka/?page=favorites">❤️ Избранное</a></li>
+
                         <li><a href="/znahidka/logout.php">Выход</a></li>
                     <?php else: ?>
                         <li><a href="/znahidka/?page=login">Вход</a></li>
