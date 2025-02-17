@@ -4,7 +4,8 @@ require_once 'core/config/config.php';
 require_once 'core/database/db.php';
 
 // Разрешённые страницы
-$allowed_pages = ['home', 'catalog', 'product', 'cart', 'profile', 'admin', 'products', 'product_add', 'login', 'favorites'];
+$allowed_pages = ['home', 'catalog', 'product', 'cart', 'profile', 'admin', 'products', 'product_add', 'product_edit', 'login', 'favorites'];
+
 
 // Определяем текущую страницу
 $page = $_GET['page'] ?? 'home';
@@ -31,3 +32,9 @@ if (file_exists($page_path)) {
 } else {
     require "views/home/index.php"; // Если файла нет, загружаем главную
 }
+
+if ($page === 'product_edit') {
+    require "views/admin/product_edit.php";
+    exit;
+}
+
