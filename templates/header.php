@@ -21,9 +21,14 @@ session_start();
                         <li><a href="/znahidka/?page=profile">Личный кабинет</a></li>
                         <li><a href="/znahidka/?page=favorites">❤️ Избранное</a></li>
 
-                        <li><a href="/znahidka/logout.php">Выход</a></li>
+                        <li><a href="/znahidka/core/auth/logout.php">Выход</a></li>
                     <?php else: ?>
-                        <li><a href="/znahidka/?page=login">Вход</a></li>
+                        <?php if (isset($_SESSION['user_id'])): ?>
+    <li><a href="/znahidka/?page=profile">👤 <?= htmlspecialchars($_SESSION['user_name']) ?></a></li>
+    <li><a href="/znahidka/core/auth/logout.php">Выход</a></li>
+<?php else: ?>
+    <li><a href="/znahidka/?page=login">Вход</a></li>
+<?php endif; ?>
                     <?php endif; ?>
                 </ul>
             </nav>
