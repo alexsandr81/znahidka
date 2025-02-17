@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once 'core/database/db.php';
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -17,18 +18,24 @@ session_start();
                 <ul>
                     <li><a href="/znahidka/?page=catalog">Каталог</a></li>
                     <li><a href="/znahidka/?page=cart">Корзина</a></li>
+                    <li><a href="/znahidka/?page=favorites">❤️ Избранное</a></li>
+
                     <?php if (isset($_SESSION['user_id'])): ?>
-                        <li><a href="/znahidka/?page=profile">Личный кабинет</a></li>
-                        <li><a href="/znahidka/?page=favorites">❤️ Избранное</a></li>
+                        <li><a href="/znahidka/?page=profile">👤 <?= htmlspecialchars($_SESSION['user_name']) ?></a></li>
+                        
+                        <?php
+                        // Проверяем, админ ли пользователь
+                        $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+                        $stmt->execute([$_SESSION['user_id']]);
+                        $user = $stmt->fetch();
+
+                        if ($user && $user['role'] === 'admin'): ?>
+                            <li><a href="/znahidka/?page=admin">⚙️ Админ-панель</a></li>
+                        <?php endif; ?>
 
                         <li><a href="/znahidka/core/auth/logout.php">Выход</a></li>
                     <?php else: ?>
-                        <?php if (isset($_SESSION['user_id'])): ?>
-    <li><a href="/znahidka/?page=profile">👤 <?= htmlspecialchars($_SESSION['user_name']) ?></a></li>
-    <li><a href="/znahidka/core/auth/logout.php">Выход</a></li>
-<?php else: ?>
-    <li><a href="/znahidka/?page=login">Вход</a></li>
-<?php endif; ?>
+                        <li><a href="/znahidka/?page=login">Вход</a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
