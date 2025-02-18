@@ -1,6 +1,7 @@
 <?php
 session_start();
-require_once '../database/db.php';
+require_once __DIR__ . '/../../templates/header.php';
+require_once __DIR__ . '/../../core/database/db.php';
 
 if (empty($_SESSION['cart'])) {
     $_SESSION['message'] = "Ошибка: корзина пуста!";
@@ -8,58 +9,62 @@ if (empty($_SESSION['cart'])) {
     exit;
 }
 
-$user_id = $_SESSION['user_id'] ?? 1; // Заменить на реальную авторизацию
+$user_id = $_SESSION['user_id'] ?? null;
 
+// Получаем товары из корзины (защита от пустого массива)
+$cart = $_SESSION['cart'] ?? [];
 $total_price = 0;
-$order_items = [];
+$products = [];
 
-foreach ($_SESSION['cart'] as $id => $quantity) {
-    $stmt = $pdo->prepare("SELECT title, price FROM products WHERE id = ?");
-    $stmt->execute([$id]);
-    $product = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    if ($product && isset($product['price'])) {
-        $price = (float) $product['price']; // Приводим к числу
-        $quantity = (int) $quantity; // Приводим количество к числу
-        $total_price += $price * $quantity;
-
-        // Добавляем в массив товаров для заказа
-        $order_items[] = [
-            'product_id' => $id,
-            'title' => $product['title'],
-            'quantity' => $quantity,
-            'price' => $price
-        ];
-    }
+if (!empty($cart)) {
+    $placeholders = implode(',', array_fill(0, count($cart), '?'));
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
+    $stmt->execute(array_keys($cart));
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+?>
 
-if ($total_price == 0) {
-    $_SESSION['message'] = "Ошибка: невозможно оформить заказ с нулевой суммой!";
-    header("Location: /znahidka/?page=cart");
-    exit;
-}
+<div class="container">
+    <h2>🛍 Оформление заказа</h2>
 
-try {
-    // Вставляем заказ в `orders`
-    $stmt = $pdo->prepare("INSERT INTO orders (user_id, total_price) VALUES (?, ?)");
-    $stmt->execute([$user_id, $total_price]);
+    <form action="/znahidka/core/cart/process_order.php" method="POST">
+        <h3>📦 Товары в заказе</h3>
+        <ul>
+            <?php foreach ($products as $product): 
+                $quantity = (int) $cart[$product['id']];
+                $sum = $product['price'] * $quantity;
+                $total_price += $sum;
+            ?>
+                <li>
+                    <?= htmlspecialchars($product['title']) ?> (<?= $quantity ?> шт.) - <?= number_format($sum, 2) ?> грн
+                </li>
+            <?php endforeach; ?>
+        </ul>
 
-    $order_id = $pdo->lastInsertId(); // Получаем ID заказа
+        <h3>👤 Контактные данные</h3>
+        <label>Имя:</label>
+        <input type="text" name="name" required>
 
-    // Вставляем товары в `order_items`
-    $stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
-    foreach ($order_items as $item) {
-        $stmt->execute([$order_id, $item['product_id'], $item['quantity'], $item['price']]);
-    }
+        <label>Телефон:</label>
+        <input type="text" name="phone" required>
 
-    // Очищаем корзину
-    $_SESSION['cart'] = []; 
+        <label>Email:</label>
+        <input type="email" name="email" required>
 
-    $_SESSION['message'] = "Заказ #$order_id успешно оформлен! 🎉";
-    header("Location: /znahidka/?page=cart");
-    exit;
-} catch (PDOException $e) {
-    $_SESSION['message'] = "Ошибка при создании заказа: " . $e->getMessage();
-    header("Location: /znahidka/?page=cart");
-    exit;
-}
+        <h3>🚚 Адрес доставки</h3>
+        <label>Город:</label>
+        <input type="text" name="city" required>
+
+        <label>Улица, дом, квартира:</label>
+        <input type="text" name="address" required>
+
+        <label>Комментарий к заказу:</label>
+        <textarea name="comment"></textarea>
+
+        <h3>💰 Итоговая сумма: <?= number_format($total_price, 2) ?> грн</h3>
+        
+        <button type="submit">✅ Оформить заказ</button>
+    </form>
+</div>
+
+<?php require_once __DIR__ . '/../../templates/footer.php'; ?>
