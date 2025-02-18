@@ -63,7 +63,7 @@ if (!empty($cart)) {
 
         <h3>💰 Итоговая сумма: <?= number_format($total_price, 2) ?> грн</h3>
         
-        <button type="submit">✅ Оформить заказ</button>
+        <button type="submit">Оформить заказ</button>
     </form>
 </div>
 

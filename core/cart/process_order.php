@@ -51,7 +51,7 @@ try {
 
     // Очищаем корзину
     $_SESSION['cart'] = [];
-    $_SESSION['message'] = "✅ Заказ #$order_id успешно оформлен!";
+    $_SESSION['message'] = "Заказ #$order_id успешно оформлен!";
     header("Location: /znahidka/?page=cart");
     exit;
 

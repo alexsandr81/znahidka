@@ -26,14 +26,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
     $price = trim($_POST['price'] ?? '');
     $category = trim($_POST['category'] ?? '');
+    $sku = trim($_POST['sku'] ?? '');  // Добавляем поле SKU
 
-    if (!empty($title) && !empty($price) && !empty($category)) {
-        $stmt = $pdo->prepare("INSERT INTO products (title, price, category) VALUES (?, ?, ?)");
-        $stmt->execute([$title, $price, $category]);
+    // Проверяем, что все обязательные поля заполнены
+    if (!empty($title) && !empty($price) && !empty($category) && !empty($sku)) {
+        // Проверка на уникальность SKU
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE sku = ?");
+        $stmt->execute([$sku]);
+        if ($stmt->fetchColumn() > 0) {
+            $_SESSION['message'] = "Товар с таким SKU уже существует!";
+        } else {
+            // Добавляем товар в базу данных
+            $stmt = $pdo->prepare("INSERT INTO products (title, price, category, sku) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$title, $price, $category, $sku]);
 
-        $_SESSION['message'] = "Товар добавлен!";
-        header("Location: /znahidka/?page=products");
-        exit;
+            $_SESSION['message'] = "Товар добавлен!";
+            header("Location: /znahidka/?page=products");
+            exit;
+        }
     } else {
         $_SESSION['message'] = "Заполните все поля!";
     }
@@ -57,6 +67,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <label>Категория:</label>
         <input type="text" name="category" required>
+
+        <label>SKU:</label>  <!-- Добавлен ввод для SKU -->
+        <input type="text" name="sku" required>
 
         <button type="submit">Добавить</button>
     </form>
