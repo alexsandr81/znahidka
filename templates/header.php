@@ -21,7 +21,7 @@ require_once __DIR__ . '/../core/database/db.php';
             <ul>
                 <li><a href="/znahidka/?page=catalog">Каталог</a></li>
                 <li><a href="/znahidka/?page=cart">Корзина</a></li>
-                <!-- <li><a href="/znahidka/?page=favorites">❤️ Избранное</a></li> -->
+                <li><a href="/znahidka/?page=favorites">❤️</a></li>
 
                 <?php if (isset($_SESSION['user_id'])): ?>
                     <!-- <li><a href="/znahidka/views/orders/my_orders.php">📦 Мои заказы</a></li> -->
