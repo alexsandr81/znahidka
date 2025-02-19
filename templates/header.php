@@ -19,6 +19,8 @@ require_once __DIR__ . '/../core/database/db.php';
         <h1><a href="/znahidka/">ЗНАХІДКА</a></h1>
         <nav>
             <ul>
+            <!-- <li><a href="/znahidka/?page=admin_orders">📦 Управление заказами</a></li> -->
+
                 <li><a href="/znahidka/?page=catalog">Каталог</a></li>
                 <li><a href="/znahidka/?page=cart">Корзина</a></li>
                 <li><a href="/znahidka/?page=favorites">❤️</a></li>
