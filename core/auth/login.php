@@ -1,8 +1,7 @@
 <?php
-session_start();
-require_once '../database/db.php';
+require_once __DIR__ . '/../../core/init.php';
 
-$email = $_POST['email'] ?? '';
+$email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
 $password = $_POST['password'] ?? '';
 
 if (!$email || !$password) {
@@ -17,23 +16,30 @@ $stmt->execute([$email]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    $_SESSION['message'] = "Пользователь не найден!";
+    $_SESSION['message'] = "Неверный email или пароль!";
     header("Location: /znahidka/?page=login");
     exit;
 }
 
-// Проверяем, совпадает ли пароль
-$hashed_password = hash('sha256', $password);
-if ($hashed_password !== $user['password']) {
-    $_SESSION['message'] = "Неверный пароль!";
-    header("Location: /znahidka/?page=login");
+// Проверяем пароль (новый или старый хеш)
+if (password_verify($password, $user['password']) || hash('sha256', $password) === $user['password']) {
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_name'] = htmlspecialchars($user['name']);
+    $_SESSION['role'] = $user['role'];
+
+    // Если старый пароль — обновляем на новый `password_hash()`
+    if (hash('sha256', $password) === $user['password']) {
+        $newHash = password_hash($password, PASSWORD_BCRYPT);
+        $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $stmt->execute([$newHash, $user['id']]);
+    }
+
+    header("Location: /znahidka/?page=profile");
     exit;
 }
 
-// Авторизация успешна
-$_SESSION['user_id'] = $user['id'];
-$_SESSION['user_name'] = $user['name'];
-
-$_SESSION['message'] = "Добро пожаловать, " . htmlspecialchars($user['name']) . "!";
-header("Location: /znahidka/?page=profile"); // Перенаправляем в личный кабинет
+$_SESSION['message'] = "Неверный email или пароль!";
+header("Location: /znahidka/?page=login");
 exit;
+?>
+

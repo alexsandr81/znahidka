@@ -36,7 +36,7 @@ if ($page === 'products') {
     exit;
 } elseif ($page === 'admin_orders') { 
     if (file_exists("views/admin/admin_orders.php")) {
-        echo "OK"; // Должно появиться "OK" на экране
+        
         require "views/admin/admin_orders.php";
         exit;
     } else {
