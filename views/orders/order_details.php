@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../../core/database/db.php';
 require_once '../../templates/header.php';
 
@@ -12,7 +15,7 @@ if (!$user_id || !$order_id) {
     exit;
 }
 
-// Получаем заказ
+// Проверяем, является ли пользователь владельцем заказа
 $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
 $stmt->execute([$order_id, $user_id]);
 $order = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -24,40 +27,48 @@ if (!$order) {
 }
 
 // Получаем товары заказа
-$stmt = $pdo->prepare("SELECT oi.quantity, oi.price, p.title FROM order_items oi 
-    JOIN products p ON oi.product_id = p.id 
-    WHERE oi.order_id = ?");
+$stmt = $pdo->prepare("
+    SELECT oi.quantity, oi.price, p.title 
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.id
+    WHERE oi.order_id = ?
+");
 $stmt->execute([$order_id]);
 $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="container">
-    <h2>Детали заказа #<?= $order['id'] ?></h2>
-    <p><strong>Дата заказа:</strong> <?= $order['created_at'] ?></p>
+    <h2>Детали заказа #<?= htmlspecialchars($order['id']) ?></h2>
+    <p><strong>Дата заказа:</strong> <?= htmlspecialchars($order['created_at']) ?></p>
     <p><strong>Статус:</strong> <?= htmlspecialchars($order['status'] ?? 'В обработке') ?></p>
-    <p><strong>Общая сумма:</strong> <?= number_format($order['total_price'], 2) ?> грн</p>
+    <p><strong>Общая сумма:</strong> <?= number_format($order['total_price'] ?? 0, 2) ?> грн</p>
 
-    <h3>Товары в заказе:</h3>
-    <table class="order-items-table">
-        <thead>
-            <tr>
-                <th>Товар</th>
-                <th>Количество</th>
-                <th>Цена</th>
-                <th>Сумма</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($items as $item): ?>
+    <h3>📦 Товары в заказе:</h3>
+
+    <?php if (!empty($items)): ?>
+        <table class="order-items-table">
+            <thead>
                 <tr>
-                    <td><?= htmlspecialchars($item['title']) ?></td>
-                    <td><?= (int)$item['quantity'] ?></td>
-                    <td><?= number_format($item['price'], 2) ?> грн</td>
-                    <td><?= number_format($item['price'] * $item['quantity'], 2) ?> грн</td>
+                    <th>Товар</th>
+                    <th>Количество</th>
+                    <th>Цена</th>
+                    <th>Сумма</th>
                 </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php foreach ($items as $item): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($item['title']) ?></td>
+                        <td><?= (int)$item['quantity'] ?></td>
+                        <td><?= number_format($item['price'], 2) ?> грн</td>
+                        <td><?= number_format($item['price'] * $item['quantity'], 2) ?> грн</td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <p>❌ Нет товаров в этом заказе.</p>
+    <?php endif; ?>
 </div>
 
 <?php require_once '../../templates/footer.php'; ?>

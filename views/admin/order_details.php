@@ -5,7 +5,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../../core/database/db.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+if (!isset($_SESSION['user_id'])) {
     $_SESSION['message'] = "Ошибка: доступ запрещён!";
     header("Location: /znahidka/?page=login");
     exit;
@@ -20,13 +20,13 @@ if (!$order_id) {
     exit;
 }
 
-// Загружаем данные заказа
-$stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
-$stmt->execute([$order_id]);
+// Проверяем, является ли пользователь владельцем заказа или админом
+$stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ? AND (user_id = ? OR ? = 'admin')");
+$stmt->execute([$order_id, $_SESSION['user_id'], $_SESSION['role']]);
 $order = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$order) {
-    $_SESSION['message'] = "Ошибка: заказ не найден!";
+    $_SESSION['message'] = "Ошибка: заказ не найден или у вас нет доступа!";
     header("Location: /znahidka/?page=admin_orders");
     exit;
 }
@@ -46,14 +46,19 @@ require_once __DIR__ . '/../../templates/header.php';
     <h3>📦 Товары в заказе</h3>
     <ul>
         <?php
-        $stmt = $pdo->prepare("SELECT product_name, quantity FROM order_items WHERE order_id = ?");
+        $stmt = $pdo->prepare("
+            SELECT p.title AS product_name, oi.quantity 
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        ");
         $stmt->execute([$order_id]);
         $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if ($items):
             foreach ($items as $item):
         ?>
-                <li><?= htmlspecialchars($item['product_name'] ?? 'Неизвестный товар') ?> - <?= intval($item['quantity'] ?? 0) ?> шт.</li>
+                <li><?= htmlspecialchars($item['product_name']) ?> - <?= intval($item['quantity']) ?> шт.</li>
         <?php
             endforeach;
         else:

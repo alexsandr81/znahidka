@@ -22,31 +22,48 @@ $city = trim($_POST['city']);
 $address = trim($_POST['address']);
 $comment = trim($_POST['comment']);
 
+// Проверяем, есть ли вообще товары в корзине
+if (!$user_id || empty($_SESSION['cart'])) {
+    $_SESSION['message'] = "Ошибка: корзина пуста или пользователь не авторизован!";
+    header("Location: /znahidka/?page=cart");
+    exit;
+}
+
+// Получаем список товаров из корзины
 $total_price = 0;
 $cart = $_SESSION['cart'];
-
-// Получаем товары из корзины
 $placeholders = implode(',', array_fill(0, count($cart), '?'));
+
 $stmt = $pdo->prepare("SELECT id, price FROM products WHERE id IN ($placeholders)");
 $stmt->execute(array_keys($cart));
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Рассчитываем общую сумму
 foreach ($products as $product) {
     $quantity = (int) $cart[$product['id']];
-    $total_price += $product['price'] * $quantity;
+    if ($quantity > 0) { // Добавляем защиту от нулевого количества
+        $total_price += $product['price'] * $quantity;
+    }
 }
 
-// Сохраняем заказ в БД (без оплаты)
+// Сохраняем заказ
 try {
-    $stmt = $pdo->prepare("INSERT INTO orders (user_id, name, phone, email, city, address, comment, total_price) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$user_id, $name, $phone, $email, $city, $address, $comment, $total_price]);
+    $stmt = $pdo->prepare("INSERT INTO orders (user_id, name, phone, email, address, comment, total_price, status, created_at) 
+                           VALUES (?, ?, ?, ?, ?, ?, ?, 'В обработке', NOW())");
+    $stmt->execute([$user_id, $name, $phone, $email, $address, $comment, $total_price]);
 
-    $order_id = $pdo->lastInsertId();
+    $order_id = $pdo->lastInsertId(); // ✅ Получаем ID нового заказа
 
-    // Сохраняем товары заказа
-    $stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)");
+    // Добавляем товары в `order_items`
+    $stmt = $pdo->prepare("INSERT INTO order_items (order_id, product_id, quantity, price) 
+                           VALUES (?, ?, ?, ?)");
     foreach ($products as $product) {
-        $stmt->execute([$order_id, $product['id'], $cart[$product['id']], $product['price']]);
+        $product_id = $product['id'];
+        $quantity = (int) $cart[$product_id];
+
+        if ($quantity > 0) { // ✅ Проверяем, что количество больше 0
+            $stmt->execute([$order_id, $product_id, $quantity, $product['price']]);
+        }
     }
 
     // Очищаем корзину

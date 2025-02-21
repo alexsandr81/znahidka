@@ -1,5 +1,8 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../config/config.php';
 require_once '../database/db.php';
 
@@ -7,7 +10,7 @@ $product_id = $_POST['product_id'] ?? 0;
 
 if ($product_id > 0) {
     // Получаем данные о товаре из базы
-    $stmt = $pdo->prepare("SELECT name, price, image FROM products WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, title, price, image FROM products WHERE id = ?");
     $stmt->execute([$product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -18,7 +21,7 @@ if ($product_id > 0) {
         } else {
             // Если товара нет, добавляем его в корзину
             $_SESSION['cart'][$product_id] = [
-                'name' => $product['name'],
+                'title' => $product['title'],
                 'price' => $product['price'],
                 'image' => $product['image'],
                 'quantity' => 1
