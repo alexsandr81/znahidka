@@ -24,26 +24,24 @@ if (!$user || $user['role'] !== 'admin') {
 // Обрабатываем отправку формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title'] ?? '');
+    $description = trim($_POST['description'] ?? '');
     $price = trim($_POST['price'] ?? '');
+    $size = trim($_POST['size'] ?? '');
+    $material = trim($_POST['material'] ?? '');
     $category = trim($_POST['category'] ?? '');
-    $sku = trim($_POST['sku'] ?? '');  // Добавляем поле SKU
+
+    // Генерируем уникальный SKU
+    $sku = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
 
     // Проверяем, что все обязательные поля заполнены
-    if (!empty($title) && !empty($price) && !empty($category) && !empty($sku)) {
-        // Проверка на уникальность SKU
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE sku = ?");
-        $stmt->execute([$sku]);
-        if ($stmt->fetchColumn() > 0) {
-            $_SESSION['message'] = "Товар с таким SKU уже существует!";
-        } else {
-            // Добавляем товар в базу данных
-            $stmt = $pdo->prepare("INSERT INTO products (title, price, category, sku) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$title, $price, $category, $sku]);
+    if (!empty($title) && !empty($description) && !empty($price) && !empty($size) && !empty($material) && !empty($category)) {
+        // Добавляем товар в базу данных
+        $stmt = $pdo->prepare("INSERT INTO products (title, description, price, size, material, category, sku) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $description, $price, $size, $material, $category, $sku]);
 
-            $_SESSION['message'] = "Товар добавлен!";
-            header("Location: /znahidka/?page=products");
-            exit;
-        }
+        $_SESSION['message'] = "Товар добавлен!";
+        header("Location: /znahidka/?page=products");
+        exit;
     } else {
         $_SESSION['message'] = "Заполните все поля!";
     }
@@ -62,14 +60,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>Название:</label>
         <input type="text" name="title" required>
 
+        <label>Описание:</label>
+        <textarea name="description" required></textarea>
+
         <label>Цена:</label>
         <input type="number" name="price" required>
 
+        <label>Размер:</label>
+        <input type="text" name="size" required>
+
+        <label>Материал:</label>
+        <input type="text" name="material" required>
+
         <label>Категория:</label>
         <input type="text" name="category" required>
-
-        <label>SKU:</label>  <!-- Добавлен ввод для SKU -->
-        <input type="text" name="sku" required>
 
         <button type="submit">Добавить</button>
     </form>

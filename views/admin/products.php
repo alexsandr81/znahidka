@@ -41,8 +41,12 @@ $products = $stmt->fetchAll();
             <tr>
                 <th>ID</th>
                 <th>Название</th>
+                <th>Описание</th>
                 <th>Цена</th>
+                <th>Размер</th>
+                <th>Материал</th>
                 <th>Категория</th>
+                <th>SKU</th>
                 <th>Действия</th>
             </tr>
         </thead>
@@ -51,8 +55,12 @@ $products = $stmt->fetchAll();
                 <tr>
                     <td><?= $product['id'] ?></td>
                     <td><?= htmlspecialchars($product['title']) ?></td>
+                    <td><?= htmlspecialchars($product['description']) ?></td>
                     <td><?= $product['price'] ?> грн</td>
+                    <td><?= htmlspecialchars($product['size']) ?></td>
+                    <td><?= htmlspecialchars($product['material']) ?></td>
                     <td><?= htmlspecialchars($product['category']) ?></td>
+                    <td><?= htmlspecialchars($product['sku']) ?></td>
                     <td>
                         <a href="/znahidka/?page=product_edit&id=<?= $product['id'] ?>">✏️</a>
                         <a href="/znahidka/core/admin/delete_product.php?id=<?= $product['id'] ?>" class="delete-btn">❌</a>
