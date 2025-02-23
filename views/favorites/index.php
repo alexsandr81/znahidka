@@ -2,37 +2,57 @@
 require_once 'templates/header.php';
 require_once 'core/database/db.php';
 
-$favorites = $_SESSION['favorites'] ?? [];
+$user_id = $_SESSION['user_id'] ?? null;
 
-if (empty($favorites)) {
-    echo "<div class='container'><h2>Избранное пусто</h2></div>";
-    require_once 'templates/footer.php';
+if (!$user_id) {
+    $_SESSION['message'] = "❌ Войдите в систему, чтобы просматривать избранное!";
+    header("Location: /znahidka/?page=login");
     exit;
 }
 
-// Получаем список товаров из базы
-$placeholders = implode(',', array_fill(0, count($favorites), '?'));
-$stmt = $pdo->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
-$stmt->execute(array_keys($favorites));
-$products = $stmt->fetchAll();
+// Получаем избранные товары пользователя
+$favorites = $_SESSION['favorites'] ?? [];
+
+if (!empty($favorites)) {
+    $placeholders = implode(',', array_fill(0, count($favorites), '?'));
+    $stmt = $pdo->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
+    $stmt->execute(array_keys($favorites));
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} else {
+    $products = [];
+}
 ?>
 
 <div class="container">
-    <h2>Избранные товары ❤️</h2>
-    <div class="products">
-        <?php foreach ($products as $product): ?>
-            <div class="product">
-                <img src="/znahidka/img/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['title']) ?>">
-                <h4><?= htmlspecialchars($product['title']) ?></h4>
-                <p>Цена: <?= htmlspecialchars($product['price']) ?> грн</p>
-                <a href="/znahidka/?page=product&id=<?= $product['id'] ?>">Подробнее</a>
-                <form method="post" action="/znahidka/core/favorites/toggle_favorite.php">
-                    <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                    <button type="submit" class="favorite-btn">💔 Убрать из избранного</button>
-                </form>
-            </div>
-        <?php endforeach; ?>
-    </div>
+    <h2>❤️ Избранное</h2>
+
+    <?php if (empty($products)): ?>
+        <p>📭 В избранном пока пусто.</p>
+    <?php else: ?>
+        <div class="product-list">
+            <?php foreach ($products as $product): ?>
+                <div class="product-card">
+                    <a href="/znahidka/?page=product&id=<?= $product['id'] ?>">
+                        <?php
+                        $image_path = "/znahidka/img/products/" . htmlspecialchars($product['image']);
+                        if (!empty($product['image']) && file_exists($_SERVER['DOCUMENT_ROOT'] . $image_path)): ?>
+                            <img src="<?= $image_path ?>" width="150">
+                        <?php else: ?>
+                            <img src="/znahidka/img/no-image.png" width="150">
+                        <?php endif; ?>
+                        
+                        <h3><?= htmlspecialchars($product['title']) ?></h3>
+                    </a>
+                    <p><strong>Цена:</strong> <?= number_format($product['price'], 2) ?> грн</p>
+
+                    <form method="post" action="/znahidka/core/favorites/toggle_favorite.php">
+                        <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
+                        <button type="submit" class="favorite-btn">💔 Убрать</button>
+                    </form>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <?php require_once 'templates/footer.php'; ?>
