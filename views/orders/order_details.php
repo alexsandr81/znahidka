@@ -28,7 +28,7 @@ if (!$order) {
 
 // Получаем товары заказа
 $stmt = $pdo->prepare("
-    SELECT oi.quantity, oi.price, p.title 
+    SELECT oi.quantity, oi.price, p.title, p.image 
     FROM order_items oi
     JOIN products p ON oi.product_id = p.id
     WHERE oi.order_id = ?
@@ -49,6 +49,7 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <table class="order-items-table">
             <thead>
                 <tr>
+                    <th>Фото</th>
                     <th>Товар</th>
                     <th>Количество</th>
                     <th>Цена</th>
@@ -58,6 +59,9 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <tbody>
                 <?php foreach ($items as $item): ?>
                     <tr>
+                        <td>
+                            <img src="/znahidka/img/products/<?= htmlspecialchars($item['image']) ?>" width="80" alt="<?= htmlspecialchars($item['title']) ?>">
+                        </td>
                         <td><?= htmlspecialchars($item['title']) ?></td>
                         <td><?= (int)$item['quantity'] ?></td>
                         <td><?= number_format($item['price'], 2) ?> грн</td>

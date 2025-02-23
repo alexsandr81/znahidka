@@ -39,7 +39,7 @@
         while ($product = $stmt->fetch()):
         ?>
             <div class="product">
-            <img src="/znahidka/img/products/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['title']) ?>">
+            <img src="/znahidka/img/products/<?= htmlspecialchars($product['image']) ?>" width="200" alt="<?= htmlspecialchars($product['title']) ?>">
                 <h4><?= htmlspecialchars($product['title']) ?></h4>
                 <p>Цена: <?= htmlspecialchars($product['price']) ?> грн</p>
                 <a href="/znahidka/?page=product&id=<?= $product['id'] ?>">Подробнее</a>
