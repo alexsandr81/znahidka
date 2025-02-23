@@ -1,38 +1,40 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
+require_once '../../core/database/db.php';
 
-require_once __DIR__ . '/../../core/database/db.php';
-
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    $_SESSION['message'] = "Ошибка: доступ запрещён!";
-    header("Location: /znahidka/?page=login");
-    exit;
-}
-
-// Проверяем, пришли ли данные из формы
-if (!isset($_POST['order_id'], $_POST['status'])) {
-    $_SESSION['message'] = "Ошибка: некорректные данные!";
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    $_SESSION['message'] = "❌ Ошибка: некорректный запрос!";
     header("Location: /znahidka/?page=admin_orders");
     exit;
 }
 
-$order_id = $_POST['order_id'];
-$status = $_POST['status'];
+$order_id = $_POST['order_id'] ?? null;
+$new_status = $_POST['status'] ?? null;
 
-// Проверяем, есть ли такая колонка в базе
-$columns = $pdo->query("SHOW COLUMNS FROM orders LIKE 'status'")->fetch();
-if (!$columns) {
-    $_SESSION['message'] = "Ошибка: колонка 'status' отсутствует в базе!";
+if (!$order_id || !$new_status) {
+    $_SESSION['message'] = "❌ Ошибка: отсутствуют данные!";
+    header("Location: /znahidka/?page=admin_orders");
+    exit;
+}
+
+// Проверяем, существует ли заказ
+$stmt = $pdo->prepare("SELECT id FROM orders WHERE id = ?");
+$stmt->execute([$order_id]);
+$order = $stmt->fetch();
+
+if (!$order) {
+    $_SESSION['message'] = "❌ Ошибка: заказ не найден!";
     header("Location: /znahidka/?page=admin_orders");
     exit;
 }
 
 // Обновляем статус заказа
 $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
-$stmt->execute([$status, $order_id]);
+if ($stmt->execute([$new_status, $order_id])) {
+    $_SESSION['message'] = "✅ Статус заказа #$order_id обновлён!";
+} else {
+    $_SESSION['message'] = "❌ Ошибка при обновлении статуса!";
+}
 
-$_SESSION['message'] = "Статус заказа обновлён!";
 header("Location: /znahidka/?page=admin_orders");
 exit;
