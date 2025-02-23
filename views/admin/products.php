@@ -2,26 +2,22 @@
 require_once 'templates/header.php';
 require_once 'core/database/db.php';
 
-// Проверяем, авторизован ли пользователь
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['message'] = "Войдите в систему!";
     header("Location: /znahidka/?page=login");
     exit;
 }
 
-// Получаем роль пользователя
 $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $user = $stmt->fetch();
 
-// Проверяем, является ли пользователь администратором
 if (!$user || $user['role'] !== 'admin') {
     $_SESSION['message'] = "У вас нет прав!";
     header("Location: /znahidka/?page=home");
     exit;
 }
 
-// Получаем список товаров
 $stmt = $pdo->query("SELECT * FROM products ORDER BY created_at DESC");
 $products = $stmt->fetchAll();
 ?>
@@ -40,6 +36,7 @@ $products = $stmt->fetchAll();
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Фото</th>
                 <th>Название</th>
                 <th>Описание</th>
                 <th>Цена</th>
@@ -54,6 +51,11 @@ $products = $stmt->fetchAll();
             <?php foreach ($products as $product): ?>
                 <tr>
                     <td><?= $product['id'] ?></td>
+                    <td>
+                    <img src="/znahidka/img/products/<?= htmlspecialchars($product['image']) ?>" width="150">
+
+</td>
+
                     <td><?= htmlspecialchars($product['title']) ?></td>
                     <td><?= htmlspecialchars($product['description']) ?></td>
                     <td><?= $product['price'] ?> грн</td>

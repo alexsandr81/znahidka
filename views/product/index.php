@@ -22,8 +22,11 @@ $is_favorite = in_array($product_id, $favorites);
     <h2><?= htmlspecialchars($product['title']) ?></h2>
     <div class="product-details">
         <?php
-        $image_path = "/znahidka/img/" . htmlspecialchars($product['image']);
-        if (!empty($product['image']) && file_exists($_SERVER['DOCUMENT_ROOT'] . $image_path)): ?>
+        // ✅ ПРАВИЛЬНЫЙ ПУТЬ К ФОТО
+        $image_path = "/znahidka/img/products/" . htmlspecialchars($product['image']);
+        $full_image_path = $_SERVER['DOCUMENT_ROOT'] . $image_path;
+
+        if (!empty($product['image']) && file_exists($full_image_path)): ?>
             <img src="<?= $image_path ?>" alt="<?= htmlspecialchars($product['title']) ?>">
         <?php else: ?>
             <img src="/znahidka/img/no-image.png" alt="Нет изображения">
@@ -35,6 +38,7 @@ $is_favorite = in_array($product_id, $favorites);
             <p><strong>Материал:</strong> <?= htmlspecialchars($product['material']) ?></p>
             <p><strong>Артикул:</strong> <?= htmlspecialchars($product['sku']) ?></p>
             <p><strong>Цена:</strong> <?= htmlspecialchars($product['price']) ?> грн</p>
+
             <!-- Кнопка "Добавить в избранное" -->
             <form method="post" action="/znahidka/core/favorites/toggle_favorite.php">
                 <input type="hidden" name="product_id" value="<?= $product_id ?>">
