@@ -1,10 +1,8 @@
 <?php
- error_reporting(E_ALL);
- ini_set('display_errors', 1);
- 
-session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+session_start();
 
 require_once 'core/config/config.php';
 require_once 'core/database/db.php';
@@ -13,6 +11,7 @@ require_once 'core/database/db.php';
 $allowed_pages = [
     'home', 'catalog', 'product', 'cart', 'profile', 'admin', 
     'products', 'product_add', 'product_edit', 'admin_orders', 
+    'admin_users', // ✅ Добавили
     'login', 'favorites'
 ];
 
@@ -36,7 +35,6 @@ if ($page === 'products') {
     exit;
 } elseif ($page === 'admin_orders') { 
     if (file_exists("views/admin/admin_orders.php")) {
-        
         require "views/admin/admin_orders.php";
         exit;
     } else {
@@ -44,8 +42,16 @@ if ($page === 'products') {
         header("Location: /znahidka/");
         exit;
     }
-}
- else {
+} elseif ($page === 'admin_users') { // ✅ Добавили этот блок
+    if (file_exists("views/admin/admin_users.php")) {
+        require "views/admin/admin_users.php";
+        exit;
+    } else {
+        $_SESSION['message'] = "Ошибка: страница управления пользователями не найдена!";
+        header("Location: /znahidka/");
+        exit;
+    }
+} else {
     $page_path = "views/{$page}/index.php";
 
     // Проверяем, существует ли файл
