@@ -1,7 +1,4 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once 'templates/header.php';
 require_once 'core/database/db.php';
 
@@ -23,42 +20,39 @@ if (!$user || $user['role'] !== 'admin') {
     exit;
 }
 
+// Получаем существующие материалы и категории
+$materials_stmt = $pdo->query("SELECT DISTINCT material FROM products ORDER BY material");
+$materials = $materials_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$categories_stmt = $pdo->query("SELECT DISTINCT category FROM products ORDER BY category");
+$categories = $categories_stmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Обработка формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
     $price = trim($_POST['price']);
     $size = trim($_POST['size']);
-    $material = trim($_POST['material']);
-    $category = trim($_POST['category']);
-    $sku = trim($_POST['sku']); // ✅ Теперь артикул берется из формы
-
-    if (empty($sku)) { // Если артикул не указан, генерируем автоматически
-        $sku = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
-    }
+    $material = trim($_POST['material']) ?: trim($_POST['new_material']);
+    $category = trim($_POST['category']) ?: trim($_POST['new_category']);
+    $sku = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
 
     // ✅ Проверяем загрузку файла
-    $image_name = "no-image.png"; 
+    $image_name = "no-image.png";
     $upload_dir = $_SERVER['DOCUMENT_ROOT'] . "/znahidka/img/products/";
 
     if (!empty($_FILES['image']['name'])) {
         $image_name = md5(time() . $_FILES['image']['name']) . "." . pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
         $upload_file = $upload_dir . $image_name;
 
-        // ✅ Проверяем, существует ли папка img/products
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0777, true);
         }
 
-        // ✅ Перемещаем файл
-        if (!move_uploaded_file($_FILES['image']['tmp_name'], $upload_file)) {
-            $_SESSION['message'] = "❌ Ошибка загрузки файла!";
-            header("Location: /znahidka/?page=product_add");
-            exit;
-        }
+        move_uploaded_file($_FILES['image']['tmp_name'], $upload_file);
     }
 
-    // ✅ Добавляем товар в базу
-    if (!empty($title) && !empty($description) && !empty($price) && !empty($size) && !empty($material) && !empty($category) && !empty($sku)) {
+    if (!empty($title) && !empty($description) && !empty($price) && !empty($size) && !empty($material) && !empty($category)) {
         $stmt = $pdo->prepare("INSERT INTO products (title, description, price, size, material, category, sku, image) 
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$title, $description, $price, $size, $material, $category, $sku, $image_name]);
@@ -94,13 +88,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" name="size" required>
 
         <label>Материал:</label>
-        <input type="text" name="material" required>
+        <select name="material">
+            <option value="">Выберите материал</option>
+            <?php foreach ($materials as $mat): ?>
+                <option value="<?= htmlspecialchars($mat) ?>"><?= htmlspecialchars($mat) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <input type="text" name="new_material" placeholder="Или введите новый материал">
 
         <label>Категория:</label>
-        <input type="text" name="category" required>
-
-        <label>Артикул (если оставить пустым — сгенерируется автоматически):</label>
-        <input type="text" name="sku">
+        <select name="category">
+            <option value="">Выберите категорию</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+            <?php endforeach; ?>
+        </select>
+        <input type="text" name="new_category" placeholder="Или введите новую категорию">
 
         <label>Фото:</label>
         <input type="file" name="image" accept="image/*">
