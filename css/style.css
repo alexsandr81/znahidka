@@ -211,3 +211,16 @@ button:hover {
     color: red;
     text-decoration: none;
 }
+
+.description-textarea {
+    width: 200px; /* Начальная ширина */
+    min-height: 50px; /* Минимальная высота */
+    resize: both; /* Позволяет изменять размер и вертикально, и горизонтально */
+    border: 1px solid #ccc;
+    padding: 5px;
+    background: #f9f9f9;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    overflow: auto; /* Добавляет прокрутку, если текст выходит за границы */
+}
+

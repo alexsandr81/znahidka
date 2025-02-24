@@ -52,12 +52,13 @@ $products = $stmt->fetchAll();
                 <tr>
                     <td><?= $product['id'] ?></td>
                     <td>
-                    <img src="/znahidka/img/products/<?= htmlspecialchars($product['image']) ?>" width="150">
+                    <img src="/znahidka/img/products/<?= htmlspecialchars($product['image']) ?>" width="50">
 
 </td>
 
                     <td><?= htmlspecialchars($product['title']) ?></td>
-                    <td><?= htmlspecialchars($product['description']) ?></td>
+                    <td><textarea class="description-textarea"><?= htmlspecialchars($product['description']) ?> </textarea></td>
+
                     <td><?= $product['price'] ?> грн</td>
                     <td><?= htmlspecialchars($product['size']) ?></td>
                     <td><?= htmlspecialchars($product['material']) ?></td>
