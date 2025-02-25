@@ -9,12 +9,12 @@ require_once __DIR__ . '/../../templates/header.php';
 // Проверяем, является ли пользователь администратором
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     $_SESSION['message'] = "Ошибка: доступ запрещён!";
-    header("Location: /znahidka/");
+    header("Location: /znahidka/?page=home");
     exit;
 }
 
 // Получаем список пользователей
-$stmt = $pdo->query("SELECT * FROM users ORDER BY created_at DESC");
+$stmt = $pdo->query("SELECT * FROM users ORDER BY id ASC");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
@@ -33,8 +33,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <th>Имя</th>
                 <th>Email</th>
                 <th>Роль</th>
-                <th>Дата регистрации</th>
-                <th>Действия</th>
+                <th>Действие</th>
             </tr>
         </thead>
         <tbody>
@@ -44,7 +43,7 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <td><?= htmlspecialchars($user['name']) ?></td>
                     <td><?= htmlspecialchars($user['email']) ?></td>
                     <td>
-                        <form action="/znahidka/core/admin/update_user_role.php" method="POST">
+                        <form method="post" action="/znahidka/core/admin/update_user_role.php">
                             <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
                             <select name="role" onchange="this.form.submit()">
                                 <option value="user" <?= $user['role'] === 'user' ? 'selected' : '' ?>>Пользователь</option>
@@ -52,10 +51,14 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             </select>
                         </form>
                     </td>
-                    <td><?= $user['created_at'] ?></td>
                     <td>
-                        <?php if ($user['id'] !== $_SESSION['user_id']): ?> <!-- Нельзя удалить себя -->
-                            <a href="#" onclick="confirmDelete(<?= $user['id'] ?>)">❌ Удалить</a>
+                        <?php if ($user['id'] != $_SESSION['user_id']): ?>
+                            <a href="/znahidka/core/admin/delete_user.php?id=<?= $user['id'] ?>" class="delete-btn" 
+                               onclick="return confirm('Вы уверены, что хотите удалить этого пользователя?');">
+                                ❌ Удалить
+                            </a>
+                        <?php else: ?>
+                            <span class="disabled-btn">🚫 Нельзя удалить себя</span>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -63,13 +66,5 @@ $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </tbody>
     </table>
 </div>
-
-<script>
-function confirmDelete(userId) {
-    if (confirm("Вы уверены, что хотите удалить этого пользователя?")) {
-        window.location.href = "/znahidka/core/admin/delete_user.php?id=" + userId;
-    }
-}
-</script>
 
 <?php require_once __DIR__ . '/../../templates/footer.php'; ?>

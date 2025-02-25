@@ -9,11 +9,11 @@ require_once 'core/database/db.php';
 
 // Разрешённые страницы
 $allowed_pages = [
-    'home', 'catalog', 'product', 'cart', 'profile', 'admin', 
-    'products', 'product_add', 'product_edit', 'admin_orders', 
-    'admin_users', // ✅ Добавили
-    'login', 'favorites'
+    'home', 'catalog', 'product', 'cart', 'profile', 'admin',
+    'products', 'product_add', 'product_edit', 'admin_orders',
+    'admin_users', 'login', 'register', 'favorites'
 ];
+
 
 // Определяем текущую страницу
 $page = $_GET['page'] ?? 'home';
