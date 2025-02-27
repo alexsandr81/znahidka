@@ -37,25 +37,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $category = trim($_POST['category']) ?: trim($_POST['new_category']);
     $sku = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
 
-    // ✅ Проверяем загрузку файла
-    $image_name = "no-image.png";
+    // ✅ Создаём массив для хранения имён загруженных фото
+    $image_names = [];
+
+    // ✅ Проверяем загрузку файлов
     $upload_dir = $_SERVER['DOCUMENT_ROOT'] . "/znahidka/img/products/";
 
-    if (!empty($_FILES['image']['name'])) {
-        $image_name = md5(time() . $_FILES['image']['name']) . "." . pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
-        $upload_file = $upload_dir . $image_name;
+    if (!empty($_FILES['images']['name'][0])) {
+        foreach ($_FILES['images']['name'] as $index => $name) {
+            $image_name = md5(time() . $name) . "." . pathinfo($name, PATHINFO_EXTENSION);
+            $upload_file = $upload_dir . $image_name;
 
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0777, true);
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            if (move_uploaded_file($_FILES['images']['tmp_name'][$index], $upload_file)) {
+                $image_names[] = $image_name;
+            }
         }
-
-        move_uploaded_file($_FILES['image']['tmp_name'], $upload_file);
     }
 
+    // ✅ Сохраняем фото как JSON (чтобы хранить несколько)
+    $image_json = json_encode($image_names);
+
     if (!empty($title) && !empty($description) && !empty($price) && !empty($size) && !empty($material) && !empty($category)) {
-        $stmt = $pdo->prepare("INSERT INTO products (title, description, price, size, material, category, sku, image) 
+        $stmt = $pdo->prepare("INSERT INTO products (title, description, price, size, material, category, sku, images) 
                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $price, $size, $material, $category, $sku, $image_name]);
+        $stmt->execute([$title, $description, $price, $size, $material, $category, $sku, $image_json]);
 
         $_SESSION['message'] = "✅ Товар добавлен!";
         header("Location: /znahidka/?page=products");
@@ -105,8 +114,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </select>
         <input type="text" name="new_category" placeholder="Или введите новую категорию">
 
-        <label>Фото:</label>
-        <input type="file" name="image" accept="image/*">
+        <label>Фото (можно загрузить несколько):</label>
+        <input type="file" name="images[]" accept="image/*" multiple>
 
         <button type="submit">Добавить</button>
     </form>
