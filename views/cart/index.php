@@ -4,7 +4,7 @@ require_once 'core/database/db.php';
 
 $cart = $_SESSION['cart'] ?? [];
 $message = $_SESSION['message'] ?? ''; 
-unset($_SESSION['message']); // Очищаем сообщение после показа
+unset($_SESSION['message']);
 ?>
 
 <div class="container">
@@ -31,28 +31,21 @@ unset($_SESSION['message']); // Очищаем сообщение после п�
             <tbody>
                 <?php
                 $total_price = 0;
-
-                if (!empty($cart)) {
-                    $placeholders = implode(',', array_fill(0, count($cart), '?'));
-                    $stmt = $pdo->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
-                    $stmt->execute(array_keys($cart));
-                    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                } else {
-                    $products = [];
-                }
+                $placeholders = implode(',', array_fill(0, count($cart), '?'));
+                $stmt = $pdo->prepare("SELECT * FROM products WHERE id IN ($placeholders)");
+                $stmt->execute(array_keys($cart));
+                $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                 foreach ($products as $product): 
                     $product_id = $product['id'];
-                    $quantity = isset($cart[$product_id]) ? (int)$cart[$product_id] : 0; // Проверяем, что $quantity — число
-                    $price = floatval($product['price']); // Приводим к числу
+                    $quantity = isset($cart[$product_id]) ? (int)$cart[$product_id] : 0;
+                    $price = floatval($product['price']);
                     $sum = $price * $quantity;
                     $total_price += $sum;
-                    
-                    // Определяем путь к изображению
-                    $image_path = "/znahidka/img/products/" . htmlspecialchars($product['image']);
-                    if (empty($product['image']) || !file_exists($_SERVER['DOCUMENT_ROOT'] . $image_path)) {
-                        $image_path = "/znahidka/img/no-image.png"; // Если нет фото
-                    }
+
+                    // ✅ Новый способ работы с фото
+                    $images = json_decode($product['images'], true);
+                    $image_path = !empty($images[0]) ? "/znahidka/img/products/" . htmlspecialchars($images[0]) : "/znahidka/img/no-image.png";
                 ?>
                     <tr>
                         <td><img src="<?= $image_path ?>" width="80" alt="<?= htmlspecialchars($product['title']) ?>"></td>

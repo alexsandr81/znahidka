@@ -1,18 +1,8 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-require_once '../../core/database/db.php';
 require_once '../../templates/header.php';
+require_once '../../core/database/db.php';
 
 $order_id = $_GET['id'] ?? null;
-
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    $_SESSION['message'] = "Ошибка: доступ запрещён!";
-    header("Location: /znahidka/?page=login");
-    exit;
-}
 
 if (!$order_id) {
     $_SESSION['message'] = "Ошибка: заказ не найден!";
@@ -31,9 +21,9 @@ if (!$order) {
     exit;
 }
 
-// Получаем товары заказа
+// Загружаем товары в заказе
 $stmt = $pdo->prepare("
-    SELECT oi.quantity, oi.price, p.title, p.image 
+    SELECT p.id, p.title, p.images, oi.quantity, oi.price 
     FROM order_items oi
     JOIN products p ON oi.product_id = p.id
     WHERE oi.order_id = ?
@@ -52,35 +42,31 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p><strong>Статус:</strong> <?= htmlspecialchars($order['status'] ?? 'Не указан') ?></p>
 
     <h3>📦 Товары в заказе</h3>
-
-    <?php if (!empty($items)): ?>
-        <table class="order-items-table">
-            <thead>
+    <table class="order-items-table">
+        <thead>
+            <tr>
+                <th>Фото</th>
+                <th>Товар</th>
+                <th>Количество</th>
+                <th>Цена</th>
+                <th>Сумма</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($items as $item): 
+                $images = json_decode($item['images'], true);
+                $image_path = !empty($images[0]) ? "/znahidka/img/products/" . htmlspecialchars($images[0]) : "/znahidka/img/no-image.png";
+            ?>
                 <tr>
-                    <th>Фото</th>
-                    <th>Товар</th>
-                    <th>Количество</th>
-                    <th>Цена</th>
-                    <th>Сумма</th>
+                    <td><img src="<?= $image_path ?>" width="80" alt="<?= htmlspecialchars($item['title']) ?>"></td>
+                    <td><?= htmlspecialchars($item['title']) ?></td>
+                    <td><?= (int)$item['quantity'] ?></td>
+                    <td><?= number_format($item['price'], 2) ?> грн</td>
+                    <td><?= number_format($item['price'] * $item['quantity'], 2) ?> грн</td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($items as $item): ?>
-                    <tr>
-                        <td>
-                            <img src="/znahidka/img/products/<?= htmlspecialchars($item['image']) ?>" width="80" alt="<?= htmlspecialchars($item['title']) ?>">
-                        </td>
-                        <td><?= htmlspecialchars($item['title']) ?></td>
-                        <td><?= (int)$item['quantity'] ?></td>
-                        <td><?= number_format($item['price'], 2) ?> грн</td>
-                        <td><?= number_format($item['price'] * $item['quantity'], 2) ?> грн</td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <p>❌ Нет товаров в этом заказе.</p>
-    <?php endif; ?>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
 </div>
 
 <?php require_once '../../templates/footer.php'; ?>

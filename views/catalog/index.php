@@ -4,7 +4,6 @@
 <div class="container">
     <h2>Каталог товаров</h2>
 
-    <!-- Фильтр по категориям -->
     <form method="GET" action="">
         <input type="hidden" name="page" value="catalog">
         <select name="category" onchange="this.form.submit()">
@@ -23,7 +22,6 @@
 
     <div class="products">
         <?php
-        // Фильтр по категории
         $category_filter = "";
         $params = [];
         if (!empty($_GET['category'])) {
@@ -31,15 +29,15 @@
             $params['category'] = $_GET['category'];
         }
 
-        // Получаем товары
         $stmt = $pdo->prepare("SELECT * FROM products $category_filter ORDER BY created_at DESC");
         $stmt->execute($params);
 
-        // Выводим товары
         while ($product = $stmt->fetch()):
+            $images = json_decode($product['images'], true);
+            $image_path = !empty($images[0]) ? "/znahidka/img/products/" . htmlspecialchars($images[0]) : "/znahidka/img/no-image.png";
         ?>
             <div class="product">
-            <img src="/znahidka/img/products/<?= htmlspecialchars($product['image']) ?>" width="200" alt="<?= htmlspecialchars($product['title']) ?>">
+                <img src="<?= $image_path ?>" width="200" alt="<?= htmlspecialchars($product['title']) ?>">
                 <h4><?= htmlspecialchars($product['title']) ?></h4>
                 <p>Цена: <?= htmlspecialchars($product['price']) ?> грн</p>
                 <a href="/znahidka/?page=product&id=<?= $product['id'] ?>">Подробнее</a>

@@ -5,12 +5,12 @@ require_once 'core/database/db.php';
 $user_id = $_SESSION['user_id'] ?? null;
 
 if (!$user_id) {
-    $_SESSION['message'] = "❌ Войдите в систему, чтобы просматривать избранное!";
+    $_SESSION['message'] = "Ошибка: необходимо войти в аккаунт!";
     header("Location: /znahidka/?page=login");
     exit;
 }
 
-// Получаем избранные товары пользователя
+// Загружаем избранные товары
 $favorites = $_SESSION['favorites'] ?? [];
 
 if (!empty($favorites)) {
@@ -24,30 +24,26 @@ if (!empty($favorites)) {
 ?>
 
 <div class="container">
-    <h2>❤️ Избранное</h2>
+    <h2>❤️ Избранные товары</h2>
 
     <?php if (empty($products)): ?>
-        <p>📭 В избранном пока пусто.</p>
+        <p>У вас нет избранных товаров.</p>
     <?php else: ?>
-        <div class="product-list">
-            <?php foreach ($products as $product): ?>
-                <div class="product-card">
-                    <a href="/znahidka/?page=product&id=<?= $product['id'] ?>">
-                        <?php
-                        $image_path = "/znahidka/img/products/" . htmlspecialchars($product['image']);
-                        if (!empty($product['image']) && file_exists($_SERVER['DOCUMENT_ROOT'] . $image_path)): ?>
-                            <img src="<?= $image_path ?>" width="150">
-                        <?php else: ?>
-                            <img src="/znahidka/img/no-image.png" width="150">
-                        <?php endif; ?>
-                        
-                        <h3><?= htmlspecialchars($product['title']) ?></h3>
-                    </a>
-                    <p><strong>Цена:</strong> <?= number_format($product['price'], 2) ?> грн</p>
+        <div class="products">
+            <?php foreach ($products as $product): 
+                $images = json_decode($product['images'], true);
+                $image_path = !empty($images[0]) ? "/znahidka/img/products/" . htmlspecialchars($images[0]) : "/znahidka/img/no-image.png";
+            ?>
+                <div class="product">
+                    <img src="<?= $image_path ?>" width="200" alt="<?= htmlspecialchars($product['title']) ?>">
+                    <h4><?= htmlspecialchars($product['title']) ?></h4>
+                    <p>Цена: <?= htmlspecialchars($product['price']) ?> грн</p>
+                    <a href="/znahidka/?page=product&id=<?= $product['id'] ?>">Подробнее</a>
 
+                    <!-- Кнопка "Убрать из избранного" -->
                     <form method="post" action="/znahidka/core/favorites/toggle_favorite.php">
                         <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                        <button type="submit" class="favorite-btn">💔 Убрать</button>
+                        <button type="submit" class="remove-favorite">💔 Убрать</button>
                     </form>
                 </div>
             <?php endforeach; ?>

@@ -29,49 +29,37 @@ $categories = $categories_stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // Обработка формы
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title = trim($_POST['title']);
-    $description = trim($_POST['description']);
-    $price = trim($_POST['price']);
-    $size = trim($_POST['size']);
-    $material = trim($_POST['material']) ?: trim($_POST['new_material']);
-    $category = trim($_POST['category']) ?: trim($_POST['new_category']);
-    $sku = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
+    $title = $_POST['title'] ?? '';
+    $description = $_POST['description'] ?? '';
+    $price = $_POST['price'] ?? '';
+    $size = $_POST['size'] ?? '';
+    $material = $_POST['material'] ?? '';
+    $sku = $_POST['sku'] ?? '';
 
-    // ✅ Создаём массив для хранения имён загруженных фото
-    $image_names = [];
-
-    // ✅ Проверяем загрузку файлов
     $upload_dir = $_SERVER['DOCUMENT_ROOT'] . "/znahidka/img/products/";
+    $image_urls = [];
+
+    if (!file_exists($upload_dir)) {
+        mkdir($upload_dir, 0777, true);
+    }
 
     if (!empty($_FILES['images']['name'][0])) {
-        foreach ($_FILES['images']['name'] as $index => $name) {
-            $image_name = md5(time() . $name) . "." . pathinfo($name, PATHINFO_EXTENSION);
-            $upload_file = $upload_dir . $image_name;
+        foreach ($_FILES['images']['tmp_name'] as $key => $tmp_name) {
+            $file_name = uniqid() . '.' . pathinfo($_FILES['images']['name'][$key], PATHINFO_EXTENSION);
+            $file_path = $upload_dir . $file_name;
 
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
-
-            if (move_uploaded_file($_FILES['images']['tmp_name'][$index], $upload_file)) {
-                $image_names[] = $image_name;
+            if (move_uploaded_file($tmp_name, $file_path)) {
+                $image_urls[] = $file_name; // Сохраняем только имя файла!
             }
         }
     }
 
-    // ✅ Сохраняем фото как JSON (чтобы хранить несколько)
-    $image_json = json_encode($image_names);
+    $images_json = json_encode($image_urls, JSON_UNESCAPED_UNICODE);
+    $stmt = $pdo->prepare("INSERT INTO products (title, description, price, size, material, sku, images) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$title, $description, $price, $size, $material, $sku, $images_json]);
 
-    if (!empty($title) && !empty($description) && !empty($price) && !empty($size) && !empty($material) && !empty($category)) {
-        $stmt = $pdo->prepare("INSERT INTO products (title, description, price, size, material, category, sku, images) 
-                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $price, $size, $material, $category, $sku, $image_json]);
-
-        $_SESSION['message'] = "✅ Товар добавлен!";
-        header("Location: /znahidka/?page=products");
-        exit;
-    } else {
-        $_SESSION['message'] = "Заполните все поля!";
-    }
+    header("Location: /znahidka/?page=products");
+    exit;
 }
 ?>
 

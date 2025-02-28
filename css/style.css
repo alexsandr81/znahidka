@@ -224,3 +224,19 @@ button:hover {
     overflow: auto; /* Добавляет прокрутку, если текст выходит за границы */
 }
 
+.gallery-slider {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+}
+
+.gallery-slide img {
+    max-width: 150px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.gallery-slide img:hover {
+    transform: scale(1.1);
+}

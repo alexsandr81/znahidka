@@ -16,21 +16,37 @@ if (!$product) {
 // Проверяем, есть ли товар в избранном
 $favorites = $_SESSION['favorites'] ?? [];
 $is_favorite = in_array($product_id, $favorites);
+
+// ✅ Получаем массив изображений
+$images = json_decode($product['images'], true);
+if (!is_array($images)) {
+    $images = [];
+}
+
+$image_dir = "/znahidka/img/products/";
+$default_image = "/znahidka/img/no-image.png";
 ?>
 
 <div class="container">
     <h2><?= htmlspecialchars($product['title']) ?></h2>
-    <div class="product-details">
-        <?php
-        // ✅ ПРАВИЛЬНЫЙ ПУТЬ К ФОТО
-        $image_path = "/znahidka/img/products/" . htmlspecialchars($product['image']);
-        $full_image_path = $_SERVER['DOCUMENT_ROOT'] . $image_path;
 
-        if (!empty($product['image']) && file_exists($full_image_path)): ?>
-            <img src="<?= $image_path ?>" alt="<?= htmlspecialchars($product['title']) ?>">
-        <?php else: ?>
-            <img src="/znahidka/img/no-image.png" alt="Нет изображения">
-        <?php endif; ?>
+    <div class="product-details">
+        <div class="product-gallery">
+            <?php if (!empty($images)): ?>
+                <div class="gallery-slider">
+                    <?php foreach ($images as $image): ?>
+                        <?php 
+                        $image_path = $image_dir . $image;
+                        ?>
+                        <div class="gallery-slide">
+                            <img src="<?= htmlspecialchars($image_path) ?>" alt="Фото <?= htmlspecialchars($product['title']) ?>">
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <img src="<?= $default_image ?>" alt="Нет изображения">
+            <?php endif; ?>
+        </div>
 
         <div class="product-info">
             <p><strong>Описание:</strong> <?= nl2br(htmlspecialchars($product['description'])) ?></p>
