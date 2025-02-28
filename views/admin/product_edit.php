@@ -18,49 +18,46 @@ $images = !empty($product['images']) ? json_decode($product['images'], true) : [
 $image_dir = "/znahidka/img/products/";
 $default_image = "/znahidka/img/no-image.png";
 
-// ✅ Загружаем существующие материалы и категории
-$materials_stmt = $pdo->query("SELECT DISTINCT material FROM products ORDER BY material");
-$materials = $materials_stmt->fetchAll(PDO::FETCH_COLUMN);
-
-$categories_stmt = $pdo->query("SELECT DISTINCT category FROM products ORDER BY category");
-$categories = $categories_stmt->fetchAll(PDO::FETCH_COLUMN);
-
 // ✅ Обработка формы обновления
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
     $price = trim($_POST['price']);
     $size = trim($_POST['size']);
-    $material = trim($_POST['material']) ?: trim($_POST['new_material']);
-    $category = trim($_POST['category']) ?: trim($_POST['new_category']);
+    $material = trim($_POST['material']);
+    $category = trim($_POST['category']);
+    $sku = trim($_POST['sku']); // ✅ Поле артикула (SKU)
+
+    // ✅ Удаление выбранных фото
+    if (!empty($_POST['delete_images'])) {
+        $delete_images = $_POST['delete_images'];
+        $images = array_filter($images, function ($image) use ($delete_images, $image_dir) {
+            if (in_array($image, $delete_images)) {
+                unlink($_SERVER['DOCUMENT_ROOT'] . $image_dir . $image);
+                return false; // Удаляем фото из списка
+            }
+            return true;
+        });
+    }
 
     // ✅ Обработка новых загруженных изображений
     if (!empty($_FILES['images']['name'][0])) {
+        $uploaded_images = [];
         foreach ($_FILES['images']['tmp_name'] as $index => $tmp_name) {
             if (!empty($_FILES['images']['name'][$index])) {
                 $image_name = md5(time() . $_FILES['images']['name'][$index]) . "." . pathinfo($_FILES['images']['name'][$index], PATHINFO_EXTENSION);
                 move_uploaded_file($tmp_name, $_SERVER['DOCUMENT_ROOT'] . $image_dir . $image_name);
-                $images[] = $image_name;
+                $uploaded_images[] = $image_name;
             }
         }
-    }
-
-    // ✅ Удаление фото (если нужно)
-    if (!empty($_POST['delete_images'])) {
-        foreach ($_POST['delete_images'] as $delete_image) {
-            $image_path = $_SERVER['DOCUMENT_ROOT'] . $image_dir . $delete_image;
-            if (file_exists($image_path)) {
-                unlink($image_path);
-            }
-            $images = array_values(array_diff($images, [$delete_image]));
-        }
+        $images = array_merge($images, $uploaded_images);
     }
 
     $images_json = json_encode($images);
 
-    // ✅ Обновляем товар в базе данных
-    $stmt = $pdo->prepare("UPDATE products SET title=?, description=?, price=?, size=?, material=?, category=?, images=? WHERE id=?");
-    $stmt->execute([$title, $description, $price, $size, $material, $category, $images_json, $product_id]);
+    // ✅ Обновляем товар с артикулами и изображениями
+    $stmt = $pdo->prepare("UPDATE products SET title=?, description=?, price=?, size=?, material=?, category=?, sku=?, images=? WHERE id=?");
+    $stmt->execute([$title, $description, $price, $size, $material, $category, $sku, $images_json, $product_id]);
 
     $_SESSION['message'] = "✅ Товар обновлён!";
     header("Location: /znahidka/?page=products");
@@ -90,36 +87,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <input type="text" name="size" value="<?= htmlspecialchars($product['size']) ?>" required>
 
         <label>Материал:</label>
-        <select name="material">
-            <option value="">Выберите материал</option>
-            <?php foreach ($materials as $mat): ?>
-                <option value="<?= htmlspecialchars($mat) ?>" <?= ($product['material'] == $mat) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($mat) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <input type="text" name="new_material" placeholder="Или введите новый материал">
+        <input type="text" name="material" value="<?= htmlspecialchars($product['material']) ?>" required>
 
         <label>Категория:</label>
-        <select name="category">
-            <option value="">Выберите категорию</option>
-            <?php foreach ($categories as $cat): ?>
-                <option value="<?= htmlspecialchars($cat) ?>" <?= ($product['category'] == $cat) ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($cat) ?>
-                </option>
-            <?php endforeach; ?>
-        </select>
-        <input type="text" name="new_category" placeholder="Или введите новую категорию">
+        <input type="text" name="category" value="<?= htmlspecialchars($product['category']) ?>" required>
+
+        <label>Артикул (SKU):</label>
+        <input type="text" name="sku" value="<?= htmlspecialchars($product['sku']) ?>" required>
 
         <label>Текущие фото:</label>
         <div class="image-preview">
             <?php if (!empty($images)): ?>
                 <?php foreach ($images as $image): ?>
-                    <div>
+                    <div class="image-container">
                         <img src="<?= $image_dir . htmlspecialchars($image) ?>" width="100">
                         <label>
-                            <input type="checkbox" name="delete_images[]" value="<?= htmlspecialchars($image) ?>">
-                            ❌ Удалить
+                            <input type="checkbox" name="delete_images[]" value="<?= htmlspecialchars($image) ?>"> ❌ Удалить
                         </label>
                     </div>
                 <?php endforeach; ?>
