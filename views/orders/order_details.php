@@ -39,6 +39,11 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <p><strong>Статус:</strong> <?= htmlspecialchars($order['status'] ?? 'В обработке') ?></p>
     <p><strong>Общая сумма:</strong> <?= number_format($order['total_price'] ?? 0, 2) ?> грн</p>
 
+    <!-- ✅ Номер отслеживания -->
+    <p><strong>📦 Номер отслеживания:</strong> 
+        <?= !empty($order['tracking_number']) ? htmlspecialchars($order['tracking_number']) : 'Ожидается' ?>
+    </p>
+
     <h3>📦 Товары в заказе:</h3>
     <table class="order-items-table">
         <thead>

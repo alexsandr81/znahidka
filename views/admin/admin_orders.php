@@ -36,6 +36,7 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <th>Email</th>
                 <th>Сумма</th>
                 <th>Статус</th>
+                <th>№ Отслеживания</th>
                 <th>Дата</th>
                 <th>Действия</th>
             </tr>
@@ -48,16 +49,32 @@ $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <td><?= htmlspecialchars($order['phone'] ?? 'Не указано') ?></td>
                     <td><?= htmlspecialchars($order['email'] ?? 'Не указано') ?></td>
                     <td><?= number_format($order['total_price'] ?? 0, 2) ?> грн</td>
+                    
+                    <!-- Форма изменения статуса заказа -->
                     <td>
                         <form action="/znahidka/core/admin/update_order_status.php" method="POST">
                             <input type="hidden" name="order_id" value="<?= htmlspecialchars($order['id'] ?? '') ?>">
                             <select name="status" onchange="this.form.submit()">
-                                <option value="В обработке" <?= (!empty($order['status']) && $order['status'] === 'В обработке') ? 'selected' : '' ?>>В обработке</option>
-                                <option value="Отправлен" <?= (!empty($order['status']) && $order['status'] === 'Отправлен') ? 'selected' : '' ?>>Отправлен</option>
-                                <option value="Доставлен" <?= (!empty($order['status']) && $order['status'] === 'Доставлен') ? 'selected' : '' ?>>Доставлен</option>
+                                <?php
+                                $statuses = ['В обработке', 'Отправлен', 'Доставлен', 'Отменён', 'Завершён'];
+                                foreach ($statuses as $status) {
+                                    $selected = (!empty($order['status']) && $order['status'] === $status) ? 'selected' : '';
+                                    echo "<option value='$status' $selected>$status</option>";
+                                }
+                                ?>
                             </select>
                         </form>
                     </td>
+
+                    <!-- Форма изменения номера отслеживания -->
+                    <td>
+                        <form action="/znahidka/core/admin/update_tracking.php" method="POST">
+                            <input type="hidden" name="order_id" value="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                            <input type="text" name="tracking_number" value="<?= htmlspecialchars($order['tracking_number'] ?? '') ?>" placeholder="Введите номер">
+                            <button type="submit">💾</button>
+                        </form>
+                    </td>
+
                     <td><?= htmlspecialchars($order['created_at'] ?? '—') ?></td>
                     <td>
                         <a href="/znahidka/views/admin/order_details.php?id=<?= htmlspecialchars($order['id'] ?? '') ?>">👁 Просмотр</a>
