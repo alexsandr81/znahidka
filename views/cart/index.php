@@ -1,6 +1,6 @@
 <?php
-require_once 'templates/header.php';
-require_once 'core/database/db.php';
+require_once __DIR__ . '/../../templates/header.php';
+require_once __DIR__ . '/../../core/database/db.php';
 
 $cart = $_SESSION['cart'] ?? [];
 $message = $_SESSION['message'] ?? ''; 
@@ -43,7 +43,6 @@ unset($_SESSION['message']);
                     $sum = $price * $quantity;
                     $total_price += $sum;
 
-                    // ✅ Новый способ работы с фото
                     $images = json_decode($product['images'], true);
                     $image_path = !empty($images[0]) ? "/znahidka/img/products/" . htmlspecialchars($images[0]) : "/znahidka/img/no-image.png";
                 ?>
@@ -51,8 +50,14 @@ unset($_SESSION['message']);
                         <td><img src="<?= $image_path ?>" width="80" alt="<?= htmlspecialchars($product['title']) ?>"></td>
                         <td><?= htmlspecialchars($product['title']) ?></td>
                         <td><?= number_format($price, 2) ?> грн</td>
-                        <td><?= (int)$quantity ?></td>
-                        <td><?= number_format($sum, 2) ?> грн</td>
+                        <td>
+                            <div class="quantity-controls">
+                                <button class="quantity-btn minus" data-id="<?= $product_id ?>">➖</button>
+                                <span class="quantity"><?= (int)$quantity ?></span>
+                                <button class="quantity-btn plus" data-id="<?= $product_id ?>">➕</button>
+                            </div>
+                        </td>
+                        <td><span class="sum"><?= number_format($sum, 2) ?></span> грн</td>
                         <td>
                             <a href="/znahidka/core/cart/remove_from_cart.php?id=<?= $product_id ?>" class="remove-btn">❌ Удалить</a>
                         </td>
@@ -61,7 +66,7 @@ unset($_SESSION['message']);
             </tbody>
         </table>
 
-        <h3>💰 Общая сумма: <?= number_format($total_price, 2) ?> грн</h3>
+        <h3>💰 Общая сумма: <span id="total-price"><?= number_format($total_price, 2) ?></span> грн</h3>
 
         <form method="post" action="/znahidka/core/cart/checkout.php">
             <button type="submit">✅ Оформить заказ</button>
@@ -69,4 +74,6 @@ unset($_SESSION['message']);
     <?php endif; ?>
 </div>
 
-<?php require_once 'templates/footer.php'; ?>
+<script src="/znahidka/js/cart.js"></script>
+
+<?php require_once __DIR__ . '/../../templates/footer.php'; ?>

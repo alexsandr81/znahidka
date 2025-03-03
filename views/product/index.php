@@ -83,7 +83,11 @@ $is_favorite = in_array($product_id, $favorites);
         <!-- Кнопка "Добавить в корзину" -->
         <form method="post" action="/znahidka/core/cart/add_to_cart.php">
             <input type="hidden" name="product_id" value="<?= $product_id ?>">
-            <button type="submit">🛒 Добавить в корзину</button>
+            <!-- <button type="submit">🛒 Добавить в корзину</button> -->
+            <a href="/znahidka/core/cart/add_to_cart.php?id=<?= $product_id ?>" class="add-to-cart-btn">
+    🛒 Добавить в корзину
+</a>
+
         </form>
     </div>
 </div>
