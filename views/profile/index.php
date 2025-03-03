@@ -1,6 +1,6 @@
 <?php
-require_once 'templates/header.php';
-require_once 'core/database/db.php';
+require_once __DIR__ . '/../../templates/header.php';
+require_once __DIR__ . '/../../core/database/db.php';
 
 if (!isset($_SESSION['user_id'])) {
     $_SESSION['message'] = "Пожалуйста, войдите в аккаунт!";
@@ -17,8 +17,20 @@ $user = $stmt->fetch();
 
 <div class="container">
     <h2>👤 Личный кабинет</h2>
+
+    <!-- Вывод сообщения об успешном обновлении -->
+    <?php if (!empty($_SESSION['message'])): ?>
+        <div class="alert">
+            <?= htmlspecialchars($_SESSION['message']) ?>
+        </div>
+        <?php unset($_SESSION['message']); ?>
+    <?php endif; ?>
+
     <p><strong>Имя:</strong> <?= htmlspecialchars($user['name']) ?></p>
     <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
+    <p><strong>Телефон:</strong> <?= htmlspecialchars($user['phone'] ?? 'Не указан') ?></p>
+
+    <a href="/znahidka/views/profile/edit.php" class="btn">✏ Изменить</a>
 
     <h3>⚡ Полезные ссылки:</h3>
     <ul>
@@ -27,4 +39,4 @@ $user = $stmt->fetch();
     </ul>
 </div>
 
-<?php require_once 'templates/footer.php'; ?>
+<?php require_once __DIR__ . '/../../templates/footer.php'; ?>
