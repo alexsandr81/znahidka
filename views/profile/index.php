@@ -30,10 +30,12 @@ $user = $stmt->fetch();
     <p><strong>Email:</strong> <?= htmlspecialchars($user['email']) ?></p>
     <p><strong>Телефон:</strong> <?= htmlspecialchars($user['phone'] ?? 'Не указан') ?></p>
 
-    <a href="/znahidka/views/profile/edit.php" class="btn">✏ Изменить</a>
+    
+    
 
     <h3>⚡ Полезные ссылки:</h3>
     <ul>
+        <a href="/znahidka/views/profile/edit.php" class="btn">✏ Изменить данные о себе</a>
         <li><a href="/znahidka/views/orders/my_orders.php">📦 Мои заказы</a></li>
         <li><a href="/znahidka/core/auth/logout.php">🚪 Выйти</a></li>
     </ul>
