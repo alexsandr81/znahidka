@@ -5,17 +5,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const saveButton = document.getElementById("saveButton");
 
     function validatePasswords() {
-        if (password.value.length > 0 || confirmPassword.value.length > 0) {
-            if (password.value !== confirmPassword.value) {
-                passwordError.style.display = "block";
-                saveButton.disabled = true; // Отключаем кнопку сохранения
-            } else {
-                passwordError.style.display = "none";
-                saveButton.disabled = false; // Включаем кнопку сохранения
-            }
+        const passwordValue = password.value.trim();
+        const confirmPasswordValue = confirmPassword.value.trim();
+        const minLength = 6; // Минимальная длина пароля
+
+        if (passwordValue.length === 0 && confirmPasswordValue.length === 0) {
+            passwordError.classList.add("d-none");
+            saveButton.disabled = false;
+            return;
+        }
+
+        if (passwordValue.length < minLength) {
+            passwordError.textContent = `❌ Пароль должен быть не менее ${minLength} символов!`;
+            passwordError.classList.remove("d-none");
+            saveButton.disabled = true;
+            return;
+        }
+
+        if (passwordValue !== confirmPasswordValue) {
+            passwordError.textContent = "❌ Пароли не совпадают!";
+            passwordError.classList.remove("d-none");
+            saveButton.disabled = true;
         } else {
-            passwordError.style.display = "none";
-            saveButton.disabled = false; // Кнопка доступна, если пароли не вводятся
+            passwordError.classList.add("d-none");
+            saveButton.disabled = false;
         }
     }
 
