@@ -36,6 +36,11 @@ $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <div class="container">
     <h2>Детали заказа #<?= htmlspecialchars($order['id']) ?></h2>
     <p><strong>Дата заказа:</strong> <?= htmlspecialchars($order['created_at']) ?></p>
+    <p><strong>Имя:</strong> <?= htmlspecialchars($order['name'] ?? 'Не указано') ?></p>
+<p><strong>Телефон:</strong> <?= htmlspecialchars($order['phone'] ?? 'Не указано') ?></p>
+<p><strong>Почта:</strong> <?= htmlspecialchars($order['email'] ?? 'Не указано') ?></p>
+<p><strong>Адрес:</strong> <?= htmlspecialchars($order['address'] ?? 'Не указано') ?></p>
+
     <p><strong>Статус:</strong> <?= htmlspecialchars($order['status'] ?? 'В обработке') ?></p>
     <p><strong>Общая сумма:</strong> <?= number_format($order['total_price'] ?? 0, 2) ?> грн</p>
 
